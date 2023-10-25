@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 MIN_ANGLE_DIFF = 10
+W_SIZE = 35
 
 def hsv_mask(img):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -59,10 +60,8 @@ def save_for_train(segs, title='inner'):
     
     with open(f'{title}.npy', 'wb') as f:
         np.save(f, (X,y))
-if __name__ == '__main__':
 
-    img = cv2.imread('/home/pronton/SeAH/data/cam4_20230907_143145/250.jpg') # img = cv2.imread(argv[1])
-
+def sliding_window(img, w_size = W_SIZE):
     ''' 1. Preprocessing '''
     img = cv2.bilateralFilter(img, 9, 75, 75)
     scale = .5
@@ -71,19 +70,19 @@ if __name__ == '__main__':
 
     ''' canny '''
     canny_img = cv2.Canny(img, 50, 200)
-    cv2.imshow('canny', canny_img)
+    # cv2.imshow('canny', canny_img)
 
     ''' hsv_mask '''
     mask_img = hsv_mask(img)
-    cv2.imshow('mask', mask_img)
+    # cv2.imshow('mask', mask_img)
 
     ''' 2. Sliding Window '''
 
     ''' Initialize window starting point '''
-    W_SIZE = 35
+    w_size = 35
     startX, startY = .193 , .93 #TODO - not fixed but auto detect starting point
-    x1, y1 = int(startX*w_img -W_SIZE/2), int(startY * h_img + W_SIZE/2)
-    x2, y2 = x1+W_SIZE, y1-W_SIZE
+    x1, y1 = int(startX*w_img -w_size/2), int(startY * h_img + w_size/2)
+    x2, y2 = x1+w_size, y1-w_size
     prev_angle = 15
     inner_segs = []
     outer_segs = []
@@ -92,16 +91,16 @@ if __name__ == '__main__':
     ''' Slide window '''
     for _ in range(100):
         cv2.rectangle(img, (x1,y1), (x2, y2), (255,255,255))
-        cv2.imshow('img', img)
+        # cv2.imshow('img', img)
 
         w_edge=  canny_img[y2:y1, x1:x2]
         w_mask=  mask_img[y2:y1, x1:x2]
-        cv2.imshow('w edge', w_edge)
-        cv2.imshow('w mask', w_mask)
+        # cv2.imshow('w edge', w_edge)
+        # cv2.imshow('w mask', w_mask)
         
         ''' Finding segments '''
         segments = houghLines(w_edge).reshape(-1,4)
-        drawSegments(segments, prompt='all segs')
+        # drawSegments(segments, prompt='all segs')
 
         ''' Filter segments '''
         angles = np.arctan2(-(segments[:,3]-segments[:,1]), segments[:,2]-  segments[:,0]) / np.pi * 180
@@ -109,7 +108,7 @@ if __name__ == '__main__':
         segments = segments[filter_idx]
         angles = angles[filter_idx]
         prev_angle = np.mean(angles, axis= 0) if len(angles) else prev_angle # update previous angle
-        drawSegments(segments, prompt='filter segs')
+        # drawSegments(segments, prompt='filter segs')
 
         ''' Split into 2 group '''
         if len(segments) >=2:
@@ -119,16 +118,16 @@ if __name__ == '__main__':
             diffp_segs = other[dist2p > 4]
             samep_segs = other[dist2p < 2]
             samep_segs = np.concatenate((samep_segs.reshape(-1,4), p.reshape(-1,4)), axis= 0)
-            print('dist', dist2p)
+            # print('dist', dist2p)
 
-            drawSegments(samep_segs, prompt = 'same')
+            # drawSegments(samep_segs, prompt = 'same')
             mean_same = np.mean(samep_segs, axis= 0, dtype=int)
             center_mean_same_global = (mean_same[:2] + mean_same[2:])//2  + [x1,y2]
             radius_same = dist2point(centerP, center_mean_same_global)
             samep_segs_global = samep_segs  + [x1,y2,x1,y2]
 
             if len(diffp_segs):
-                drawSegments(diffp_segs, prompt = 'diff')
+                # drawSegments(diffp_segs, prompt = 'diff')
                 mean_diff = np.mean(diffp_segs, axis= 0)
                 mean_ = np.mean((mean_same, mean_diff), axis= 0, dtype = int)
                 x1, y1, x2, y2 = slide(mean_[2:], x1, y1,x2,y2)
@@ -147,14 +146,14 @@ if __name__ == '__main__':
                 
                 # draw inner/outer lines
                 viz_segs = np.zeros(img.shape)
-                print('same_global', samep_segs_global)
+                # print('same_global', samep_segs_global)
                 for i in inner_segs:
                     cv2.circle(viz_segs, i[:2], color = (0,0, 255), radius = 1 )
                     cv2.circle(viz_segs, i[2:], color = (0,0, 255), radius = 1 )
                 for i in outer_segs:
                     cv2.circle(viz_segs, i[:2], color = (255,0,0), radius = 1 )
                     cv2.circle(viz_segs, i[2:], color = (255,0,0), radius = 1 )
-                cv2.imshow('segs', viz_segs)
+                # cv2.imshow('segs', viz_segs)
                 
             else:
                 x1, y1, x2, y2 = slide(mean_same[2:], x1, y1,x2,y2)
@@ -174,7 +173,7 @@ if __name__ == '__main__':
         elif len(segments) == 1:
             p = segments[0]
             p_global = np.array(p).reshape(-1,4) + [x1, y2, x1, y2]
-            print('p_global', p_global)
+            # print('p_global', p_global)
             x1, y1, x2, y2 = slide(segments[0][2:], x1, y1,x2,y2)
 
             if len(inner_segs) and len(outer_segs):
@@ -190,10 +189,15 @@ if __name__ == '__main__':
         else: # move base on previous inner, outer angle?
             targetP = medianPoint(w_mask).astype(int)
             cv2.circle(w_mask, targetP, color = (125,125,125), radius = 2)
-            cv2.imshow('seg median', w_mask)
+            # cv2.imshow('seg median', w_mask)
             x1, y1, x2, y2 = slide(targetP, x1, y1, x2, y2)
             
-        cv2.waitKey(0)
+        # cv2.waitKey(0)
+    return inner_segs, outer_segs
+if __name__ == '__main__':
+
+    img = cv2.imread('/home/pronton/SeAH/data/cam4_20230907_143145/250.jpg') # img = cv2.imread(argv[1])
+    inner_segs, outer_segs = sliding_window(img)
     
     # save
     save_for_train(inner_segs, 'inner')

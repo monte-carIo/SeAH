@@ -4,7 +4,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures, SplineTransformer
 from sklearn.linear_model import RANSACRegressor, HuberRegressor
 
-def curve_fit(X,y, feature = SplineTransformer(n_knots=6, degree=3), estimator = HuberRegressor()):
+def curve_fit(X,y, feature = SplineTransformer(n_knots=4, degree=2), estimator = HuberRegressor()):
     '''
     estimator: [HuberRegressor(), RANSACRegressor(random_state=0)]
     feature: [SplineTransformer(n_knots, degree), 'PolynomialFeatures(degree)', ...]
@@ -69,6 +69,8 @@ if __name__ == '__main__':
     model = curve_fit(X, y)
     X_t, y_t = predict_curve(X, y, model)
     viz_curve = drawopenCV(X, y, X_t, y_t, viz_curve)
+    
+    # cv2.imshow('curve pred', )
     cv2.imshow('curve pred', viz_curve)
     # viz_edge = predict_curve(X, y, model)
     # cv2.imshow('predicted edge', viz_edge)

@@ -61,7 +61,7 @@ if __name__ == '__main__':
     h, w = 723,383
     viz_curve = np.zeros((h, w, 3))
     
-    print(ellipse_cv(X,y))
+    print(ellipse_cv(y,X))
     viz_curve = np.zeros((h, w, 3))
     y,X = np.load('outer.npy')
     model = curve_fit(X, y, SplineTransformer(n_knots=3, degree=3))
@@ -97,6 +97,6 @@ if __name__ == '__main__':
     # plt.gca().invert_yaxis()
     # plt.legend()
 
-    x = ellip_model(X,y)
-    Z_coord = ellip_predict(X,y,x)
+    x = ellip_model(y,X)
+    Z_coord = ellip_predict(y,X,x)
     plt.show()

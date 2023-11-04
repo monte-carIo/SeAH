@@ -16,6 +16,8 @@ def ellip_predict(X, Y, x):
     Z_coord = x[0] * X_coord ** 2 + x[1] * X_coord * Y_coord + x[2] * Y_coord**2 + x[3] * X_coord + x[4] * Y_coord
     plt.contour(X_coord, Y_coord, Z_coord, levels=[1], colors=('r'), linewidths=2)
     plt.scatter(X, Y, label='Data Points')
+    plt.gca().invert_yaxis()
+    plt.gca().invert_xaxis()
     plt.legend()
     plt.xlabel('X')
     plt.ylabel('Y')

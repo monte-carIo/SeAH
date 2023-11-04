@@ -13,7 +13,7 @@ def houghLines(img):
 
 def findStartingPoint(mask_img, canny_img, img_draw):
 
-    startX, startY = .35 , .90 #TODO - not fixed but auto detect starting point
+    startX, startY = .35 , .95 #TODO - not fixed but auto detect starting point
     h_img, w_img = img.shape[:2]
     x1, y1 = int(startX*w_img -W_SIZE/2), int(startY * h_img + W_SIZE/2)
     x2, y2 = x1+W_SIZE, y1-W_SIZE
@@ -60,24 +60,29 @@ def findStartingPoint(mask_img, canny_img, img_draw):
 
 if __name__ == '__main__':
     img = cv2.imread(sys.argv[1])
-    startX, startY = .35 , .90 #TODO - not fixed but auto detect starting point
+    startX, startY = .35 , .95 #TODO - not fixed but auto detect starting point
     scale = .5
     img = cv2.resize(img, (0,0), fx = scale, fy = scale)
+    img = cv2.flip(img, 1)
 
     h_img, w_img = img.shape[:2]
 
     # hard ROI
     img = cv2.bilateralFilter(img, 9, 75, 75)
+    cv2.imshow('img',img)
 
     ''' canny '''
-    canny_img = cv2.Canny(img, 50, 200)
+    canny_img = cv2.Canny(img, 30, 200)
 
     ''' hsv seg'''
-    mask_img = hsv_mask(img).astype(np.uint8)
+    mask_img = hsv_mask(img, lower=(0,0,40), upper=(110,100,150)).astype(np.uint8)
 
     ''' strict ROI '''
-    points = np.array([[72/w_img, 1 ], [92/w_img, 692/h_img], 
-                   [98/w_img, 687/h_img], [116/w_img,681/h_img], [132/w_img, 671/h_img], [160/w_img, 667/h_img], [1, 1]])
+    
+    points = np.array([[69/w_img, 1], [75/w_img, 717/h_img], [89/w_img, 711/h_img], [102/w_img, 704/h_img], [99/w_img, 710/h_img], [130/w_img, 696/h_img], [142/w_img, 688/h_img], [230/w_img, 632/h_img], [290/w_img, 566/h_img], [321/w_img, 468/h_img], [1,400/h_img], [1,1]])
+
+    # points = np.array([[72/w_img, 1 ], [92/w_img, 692/h_img], 
+    #                [98/w_img, 687/h_img], [116/w_img,681/h_img], [132/w_img, 671/h_img], [160/w_img, 667/h_img], [1, 1]])
     points *= [w_img, h_img]
     cv2.fillPoly(img, pts=[points.astype(int)], color=(0, 0, 0))
     cv2.imshow('roi',img)
@@ -85,9 +90,11 @@ if __name__ == '__main__':
     cv2.fillPoly(mask_img, pts=[points.astype(int)], color=(0, 0, 0))
     cv2.imshow('canny',canny_img)
     cv2.imshow('roi',img)
+    cv2.imshow('mask',mask_img)
     mask_img_draw = mask_img.copy()
     img_draw = img.copy()
-    print(findStartingPoint(mask_img, canny_img, img_draw))
+    cv2.waitKey(0)
+    # print(findStartingPoint(mask_img, canny_img, img_draw))
 
 
     # inner_segs, outer_segs = sliding_window(img) #FIXME - stop without median condition 

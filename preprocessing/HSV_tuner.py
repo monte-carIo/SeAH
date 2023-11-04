@@ -39,6 +39,8 @@ if useCamera:
     waitTime = 330
 else:
     img = cv2.imread(sys.argv[1])
+    scale = .5
+    img = cv2.resize(img, (0,0), fx = scale, fy = scale)
     output = img
     waitTime = 33
 

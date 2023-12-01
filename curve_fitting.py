@@ -13,23 +13,23 @@ def curve_fit(X,y, feature = SplineTransformer(n_knots=3, degree=3), estimator =
     estimator: [HuberRegressor(), RANSACRegressor(random_state=0)]
     feature: [SplineTransformer(n_knots, degree), 'PolynomialFeatures(degree)', ...]
     '''
+    y = y.ravel()
     model = make_pipeline(feature, estimator)
     model.fit(X, y)
     return model
 
 
-def drawopenCV(X,y, X_test, y_pred, viz_edge, dataColor = (255,255,255), predictColor = (0,125,0)):
+def drawopenCV(X,y, X_test, y_pred, viz_edge, dataColor = (0,0,255), predictColor = (0,255,0)):
     for i,j in zip(X,y):
-        # print(i,j)
-        cv2.circle(viz_edge, (int(i),int(j)), color=dataColor, radius=2)
+        cv2.circle(viz_edge, (int(i),int(j)), color=dataColor, radius=1, thickness=-1)
 
     for i,j in zip(X_test,y_pred):
-        # print(i,j)
-        cv2.circle(viz_edge, (int(i),int(j)), color=predictColor, radius=1)
+        cv2.circle(viz_edge, (int(i),int(j)), color=predictColor, radius=1, thickness=-1)
     return viz_edge
 
-def predict_curve(X,y, model):
-    X_test = np.linspace(min(X), max(X), 100)
+def predict_curve(X,y, n = 100, feature= SplineTransformer(n_knots=3, degree=3), estimator =RANSACRegressor(random_state=0)):
+    model = curve_fit(X, y, estimator=estimator, feature=feature) 
+    X_test = np.linspace(min(X), max(X), n)
     y_pred = model.predict(X_test)
 
     # for i,j in zip(X,y):

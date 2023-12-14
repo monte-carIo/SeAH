@@ -2,14 +2,16 @@
 
 ## Method 1: Traditional Computer Vision
 
-### Run
+1. Run
 ```python
 python edge_searching_psuedo.py
 ```
 
 ## Method 2: Deep learning model
+1. Data preparation & Traning
+Open file *FCN_Segnet.ipynb* to train or upload it on GG colab.
 
-### Run
+2. Inference
 ```python
 python deep_segnet_inference.py
 ```

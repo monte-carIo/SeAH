@@ -126,41 +126,51 @@ def image_preprocessing_pipeline(input_image_path):
     # Save the processed image
     return gray_image
 
-def image_processing_pipeline(input_image_path, output_image_path):
+def image_processing_pipeline(input_image_path_left,input_image_path_right, output_image_path):
     # Preprocess the image
-    gray_image = image_preprocessing_pipeline(input_image_path)
+    gray_image_left = image_preprocessing_pipeline(input_image_path_left)
+    gray_image_right = image_preprocessing_pipeline(input_image_path_right)
     # Make the image a batch of one
-    gray_image = gray_image.unsqueeze(0).to(device)
+    gray_image_left = gray_image_left.unsqueeze(0).to(device)
+    gray_image_right = gray_image_right.unsqueeze(0).to(device)
+    gray_image_right = gray_image_right.flip(-1)
     # Make a prediction
     with torch.no_grad():
-        pred = model_fcn(gray_image)
+        pred_left = model_fcn(gray_image_left)
+        pred_right = model_fcn(gray_image_right)
     # Convert the prediction to a binary image
-    if pred.shape[1] == 1:
+    if pred_left.shape[1] == 1:
             # Convert single-channel prediction to 3 channels (grayscale to RGB)
-            pred = torch.cat([pred] * 3, dim=1)
-    pred[pred > 0.2] = 1
-    pred[pred <= 0.2] = 0
+            pred_left = torch.cat([pred_left] * 3, dim=1)
+            pred_right = torch.cat([pred_right] * 3, dim=1)
+    pred_left[pred_left > 0.2] = 1
+    pred_left[pred_left <= 0.2] = 0
+    pred_right[pred_right > 0.2] = 1
+    pred_right[pred_right <= 0.2] = 0
     # Save the prediction
     resize = transforms.Resize((1447, 845))
-    pred = resize(pred)
-    # save the image
-    # get the image name in the input_image_path
-    pred_mask_filename = os.path.join(output_image_path, str(input_image_path.split("/")[-1]))
-    plt.imsave(pred_mask_filename, np.transpose(pred[0].cpu().numpy(), (1, 2, 0)))
+    pred_left = resize(pred_left)
+    pred_right = resize(pred_right)
+    pred_right = pred_right.flip(-1)
 
+    pred_mask_filename = output_image_path + 'left/'+ str(input_image_path_left.split("/")[-1])
+    plt.imsave(pred_mask_filename, np.transpose(pred_left[0].cpu().numpy(), (1, 2, 0)))
+    pred_mask_filename = output_image_path + 'right/'+ str(input_image_path_right.split("/")[-1])
+    plt.imsave(pred_mask_filename, np.transpose(pred_right[0].cpu().numpy(), (1, 2, 0)))
 
-def main(input_image_path, output_image_path):
+def main(input_image_path_left, input_image_path_right, output_image_path):
     try:
-        image_processing_pipeline(input_image_path, output_image_path)
+        image_processing_pipeline(input_image_path_left, input_image_path_right, output_image_path)
         print(f"Image processing completed. Result saved at {output_image_path}")
     except Exception as e:
         print(f"Error processing image: {e}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python script.py <input_image_path> <output_image_path>")
+    if len(sys.argv) != 4:
+        print("Usage: python3 script.py <input_image_path_left> <input_image_path_right> <output_image_path>")
     else:
-        input_image_path = sys.argv[1]
-        output_image_path = sys.argv[2]
-        main(input_image_path, output_image_path)
+        input_image_path_left = sys.argv[1]
+        input_image_path_right = sys.argv[2]
+        output_image_path = sys.argv[3]
+        main(input_image_path_left, input_image_path_right, output_image_path)
 

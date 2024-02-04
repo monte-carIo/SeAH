@@ -96,7 +96,7 @@ class FCN(nn.Module):
         '''
         return self.fcn(image)
 
-device = 'cuda'
+device = 'cpu'
 
 model_fcn = FCN().to(device)
 model_fcn.load_state_dict(torch.load("./model_versions/fcn_ver_5.2.pth"))
@@ -121,8 +121,8 @@ def image_preprocessing_pipeline(input_image_path):
     gray_image = gray_image.float()
     resize = transforms.Resize((1456, 768))
     gray_image = resize(gray_image)
-    normalize = transforms.Normalize((0.5,), (0.5,))
-    gray_image = normalize(gray_image)
+    # normalize = transforms.Normalize((0.5,), (0.5,))
+    # gray_image = normalize(gray_image)
     # Save the processed image
     return gray_image
 
